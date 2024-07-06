@@ -2,6 +2,8 @@
 Description: RAG learning 
 """
 #import 1
+
+"""
 from langchain_core.runnables import (
     RunnableBranch,
     RunnableLambda,
@@ -25,7 +27,7 @@ from yfiles_jupyter_graphs import GraphWidget
 from langchain_community.vectorstores import Neo4jVector
 from langchain_community.vectorstores.neo4j_vector import remove_lucene_chars
 from langchain_core.runnables import ConfigurableField, RunnableParallel, RunnablePassthrough
-
+"""
 
 #import 2
 
@@ -43,11 +45,13 @@ load_dotenv()
 
 api_key = os.getenv("AZURE_OPENAI_API_KEY")
 azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-api_version = "2023-07-01-preview"
+#api_version = "2023-07-01-preview"
+api_version = "2024-02-15-preview"
 
 llm = AzureChatOpenAI(
     model="gpt-4-turbo",
-    azure_deployment="gpt-4-turbo",
+    #azure_deployment="gpt-4-turbo",
+    azure_deployment="vaGraphRAGviaaos",
     api_key=api_key,
     azure_endpoint=azure_endpoint,
     openai_api_version=api_version,
@@ -68,11 +72,11 @@ embeddings = AzureOpenAIEmbeddings(
 load_dotenv()
 
 #alternative
-os.environ["NEO4J_URI"] = "xxx"
+os.environ["NEO4J_URI"] = "NEO4J_URI"
 os.environ["NEO4J_USERNAME"] = "neo4j"
-os.environ["NEO4J_PASSWORD"] = "xxx"
+os.environ["NEO4J_PASSWORD"] = "NEO4J_PASSWORD"
 
-graph = Neo4jGraph()
+#graph = Neo4jGraph()
 
 #########################################################################################################
 #                                               Test LLM?
@@ -82,16 +86,19 @@ def test_llm():
     message = HumanMessage(
     content="Translate this sentence from English to French. I love programming."
     )
-    llm.invoke([message])
-
+    response = llm.invoke([message])
+    print(message)
+    print(response.content)
+    print(response)
+    
 test_llm()
 
 #########################################################################################################
 #                                     Exploring AuraDB: Test Harry Potter
 #########################################################################################################
-
+"""
 from langchain_core.documents import Document
-
+"""
 text = """
 Mr. and Mrs. Dursley, of number four, Privet Drive, were proud to say
 that they were perfectly normal, thank you very much. They were the last
@@ -116,17 +123,19 @@ Potters had a small son, too, but they had never even seen him. This boy
 was another good reason for keeping the Potters away; they didn't want
 Dudley mixing with a child like that.
 """
-documents = [Document(page_content=text)]
-graph_documents = llm_transformer.convert_to_graph_documents(documents)
-print(f"Nodes:{graph_documents[0].nodes}")
-print(f"Relationships:{graph_documents[0].relationships}")
 
-# What is going on here?
-graph.add_graph_documents(
-  graph_documents, 
-  baseEntityLabel=True, 
-  include_source=True
-)
+def convert_to_graph_docs():
+    documents = [Document(page_content=text)]
+    graph_documents = llm_transformer.convert_to_graph_documents(documents)
+    print(f"Nodes:{graph_documents[0].nodes}")
+    print(f"Relationships:{graph_documents[0].relationships}")
+
+    # What is going on here?
+    graph.add_graph_documents(
+    graph_documents, 
+    baseEntityLabel=True, 
+    include_source=True
+    )
 
 # directly show the graph resulting from the given Cypher query
 default_cypher = "MATCH (s)-[r:!MENTIONS]->(t) RETURN s,r,t LIMIT 50"
@@ -143,12 +152,12 @@ def showGraph(cypher: str = default_cypher):
     #display(widget)
     return widget
 
-showGraph()
+#showGraph()
 
 #########################################################################################################
 #                                     Adding Embeddings
 #########################################################################################################
-
+"""
 #note ms flavour!
 from langchain_openai import AzureOpenAIEmbeddings
 
@@ -204,14 +213,14 @@ result["result"]
 
 raw_documents = WikipediaLoader(query="French Revolution", load_max_docs = 10).load()
 
-"""
+
 from langchain_community.document_loaders import HuggingFaceDatasetLoader
 dataset_name = "evidence_infer_treatment"
 page_content_column = "Text"
 
 #loading only the first 100 rows of the dataset
 loader = HuggingFaceDatasetLoader(dataset_name, page_content_column, name = '2.0', )
-"""
+
 
 len(raw_documents) #expect 10
 
@@ -357,7 +366,7 @@ print(df.iloc[0]['graph_source_documents'])
 
 from langchain_core.prompts import PromptTemplate
 from langchain.chains import LLMChain
-
+"""
 groundedness_critique_prompt = PromptTemplate.from_template("""
 You will be given a context and answer about that context.
 Your task is to provide a 'total rating' scoring how well the ANSWER is entailed by the CONTEXT. 
@@ -376,6 +385,7 @@ Now here are the context, question and answer.
 Context: {context}\n
 Answer: {answer}\n
 Response::: """)
+
 
 relevance_critique_prompt = PromptTemplate.from_template("""
 You will be given a context, and question and answer about that context.
@@ -423,7 +433,7 @@ Response::: """)
 #                                     Graph evaluation
 #########################################################################################################
 
-
+"""
 groundness = []
 relevance = []
 coherence = []
@@ -437,4 +447,4 @@ for i in range(len(df)):
     relevance.append(relevance_chain.run(question=question, answer = answer, context = context))
     coherence_chain = LLMChain(llm=llm, prompt=coherence_critique_prompt)
     coherence.append(coherence_chain.run(question=question, answer = answer))
-    
+"""

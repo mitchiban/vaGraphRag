@@ -1,0 +1,9 @@
+neo4j
+openai
+langchain
+langchain-core
+langchain_openai
+langchain-community
+langsmith
+
+python-dotenv
