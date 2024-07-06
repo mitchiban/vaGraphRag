@@ -7,3 +7,9 @@ langchain-community
 langsmith
 
 python-dotenv
+
+
+
+
+#2
+langchain-experimental
