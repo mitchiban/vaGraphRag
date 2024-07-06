@@ -13,3 +13,4 @@ python-dotenv
 
 #2
 langchain-experimental
+yfiles-jupyter-graphs

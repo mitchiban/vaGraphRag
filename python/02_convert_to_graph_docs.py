@@ -9,7 +9,7 @@ from neo4j import GraphDatabase
 from langchain_community.graphs import Neo4jGraph
 from langchain_experimental.graph_transformers import LLMGraphTransformer
 from langchain_openai import ChatOpenAI
-
+from yfiles_jupyter_graphs import GraphWidget
 
 #API
 api_key = os.getenv("AZURE_OPENAI_API_KEY")
@@ -82,7 +82,7 @@ graph_documents = llm_transformer.convert_to_graph_documents(documents)
 print(f"Nodes:{graph_documents[0].nodes}")
 print(f"Relationships:{graph_documents[0].relationships}")
 
-# add to graphdb
+# add to graphdb 
 graph.add_graph_documents(
   graph_documents, 
   baseEntityLabel=True, 
@@ -90,4 +90,20 @@ graph.add_graph_documents(
 )
 
 
+# directly show the graph resulting from the given Cypher query
+default_cypher = "MATCH (s)-[r:!MENTIONS]->(t) RETURN s,r,t LIMIT 50"
+
+def showGraph(cypher: str = default_cypher):
+    # create a neo4j session to run queries
+    driver = GraphDatabase.driver(
+        uri = neo4j_uri,
+        auth = (neo4j_user,
+                neo4j_password))
+    session = driver.session()
+    widget = GraphWidget(graph = session.run(cypher).graph())
+    widget.node_label_mapping = 'id'
+    #display(widget)
+    return widget
+
+showGraph()
 
