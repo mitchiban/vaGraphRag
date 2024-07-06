@@ -78,12 +78,13 @@ graph = Neo4jGraph()
 #                                               Test LLM?
 #########################################################################################################
 
-
-message = HumanMessage(
+def test_llm():
+    message = HumanMessage(
     content="Translate this sentence from English to French. I love programming."
-)
-llm.invoke([message])
+    )
+    llm.invoke([message])
 
+test_llm()
 
 #########################################################################################################
 #                                     Exploring AuraDB: Test Harry Potter
@@ -353,3 +354,87 @@ print(df.iloc[0]['graph_source_documents'])
 #########################################################################################################
 #                                     Evaluation Metrics
 #########################################################################################################
+
+from langchain_core.prompts import PromptTemplate
+from langchain.chains import LLMChain
+
+groundedness_critique_prompt = PromptTemplate.from_template("""
+You will be given a context and answer about that context.
+Your task is to provide a 'total rating' scoring how well the ANSWER is entailed by the CONTEXT. 
+Give your answer on a scale of 1 to 5, where 1 means that the ANSWER is logically false from the information contained in the CONTEXT, and 5 means that the ANSWER follows logically from the information contained in the CONTEXT.
+
+Provide your response in a list as follows:
+
+Response:::
+[Evaluation: (your rationale for the rating, as a text),
+Total rating: (your rating, as a number between 1 and 5)]
+
+You MUST provide values for 'Evaluation:' and 'Total rating:' in your response.
+
+Now here are the context, question and answer.
+
+Context: {context}\n
+Answer: {answer}\n
+Response::: """)
+
+relevance_critique_prompt = PromptTemplate.from_template("""
+You will be given a context, and question and answer about that context.
+Your task is to provide a 'total rating' to measure how well the answer addresses the main aspects of the question, based on the context. 
+Consider whether all and only the important aspects are contained in the answer when evaluating relevance. 
+Given the context and question, score the relevance of the answer between one to five stars using the following rating scale: 
+
+Give your response on a scale of 1 to 5, where 1 means that the answer doesn't address the question at all, and 5 means that the answer is perfectly matching the question.
+
+Provide your response in a list as follows:
+
+Response:::
+[Evaluation: (your rationale for the rating, as a text),
+Total rating: (your rating, as a number between 1 and 5)]
+
+You MUST provide values for 'Evaluation:' and 'Total rating:' in your response.
+
+Now here is the question.
+
+Answer: {answer}\n
+Question: {question}\n
+Context: {context}\n
+Response::: """)
+
+coherence_critique_prompt = PromptTemplate.from_template("""
+You will be given a question and answer.
+Your task is to measure the coherence of the answer. Coherence is measured by how well all the sentences fit together and sound naturally as a whole. Consider the overall quality of the answer when evaluating coherence. 
+Given the question and answer, score the coherence of answer on a scale of 1 to 5, where 1 means that the answer completely lacks coherence, 5 means that the answer has perfect coherency.
+
+Provide your response in a list as follows:
+
+Response:::
+[Evaluation: (your rationale for the rating, as a text),
+Total rating: (your rating, as a number between 1 and 5)]
+
+You MUST provide values for 'Evaluation:' and 'Total rating:' in your response.
+
+Now here is the question.
+
+Question: {question}\n
+Answer: {answer}\n
+Response::: """)
+
+#########################################################################################################
+#                                     Graph evaluation
+#########################################################################################################
+
+
+groundness = []
+relevance = []
+coherence = []
+for i in range(len(df)):
+    question = df.iloc[i]['questions']
+    answer = df.iloc[i]['graph_results']
+    context = df.iloc[i]['graph_source_documents']
+    groundness_chain = LLMChain(llm=llm, prompt=groundedness_critique_prompt)
+    groundness.append(groundness_chain.run(context=context, answer = answer))
+    relevance_chain = LLMChain(llm=llm, prompt=relevance_critique_prompt)
+    relevance.append(relevance_chain.run(question=question, answer = answer, context = context))
+    coherence_chain = LLMChain(llm=llm, prompt=coherence_critique_prompt)
+    coherence.append(coherence_chain.run(question=question, answer = answer))
+    
