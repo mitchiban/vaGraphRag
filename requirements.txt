@@ -17,3 +17,6 @@ yfiles-jupyter-graphs
 
 #4
 wikipedia
+
+#vis
+pyvis
